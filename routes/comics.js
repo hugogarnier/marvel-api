@@ -6,10 +6,10 @@ const isAuthentificated = require("../middlewares/isAuthentificated");
 const User = require("../models/User");
 
 // get all comics
-router.get("/comics", isAuthentificated, async (req, res) => {
+router.get("/comics", async (req, res) => {
   try {
     let title = "";
-    let limit = 50;
+    let limit = 48;
     let page = 1;
 
     req.query.title ? (title = req.query.title.toLowerCase()) : title;
@@ -29,7 +29,7 @@ router.get("/comics", isAuthentificated, async (req, res) => {
 });
 
 // get all from character
-router.get("/comics/:characterId", isAuthentificated, async (req, res) => {
+router.get("/comics/:characterId", async (req, res) => {
   try {
     let characterId = "";
 

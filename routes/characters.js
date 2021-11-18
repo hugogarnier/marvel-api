@@ -6,10 +6,10 @@ const isAuthentificated = require("../middlewares/isAuthentificated");
 const User = require("../models/User");
 
 // get all characters
-router.get("/characters", isAuthentificated, async (req, res) => {
+router.get("/characters", async (req, res) => {
   try {
     let name = "";
-    let limit = 50;
+    let limit = 48;
     let page = 1;
 
     req.query.name ? (name = req.query.name.toLowerCase()) : name;
