@@ -29,17 +29,18 @@ router.get("/characters", async (req, res) => {
 });
 
 // add fav character
-router.post("/characters/fav/:id", isAuthentificated, async (req, res) => {
+router.post("/characters/fav/", isAuthentificated, async (req, res) => {
   try {
     let id = "";
+    console.log(req.fields);
 
-    req.params.id ? (id = req.params.id) : id;
-    const characters = await axios.get(
-      `${process.env.MARVEL_API_URI}/characters?apiKey=${process.env.MARVEL_API_KEY}`
-    );
-    const characterToFav = characters.data.results.find(
-      (character) => character._id === id
-    );
+    // req.params.id ? (id = req.params.id) : id;
+    // const characters = await axios.get(
+    //   `${process.env.MARVEL_API_URI}/characters?apiKey=${process.env.MARVEL_API_KEY}`
+    // );
+    // const characterToFav = characters.data.results.find(
+    //   (character) => character._id === id
+    // );
     if (characterToFav) {
       const user = await User.findById(req.user._id).populate("charactersFav");
       const isAlreadyFav = user.charactersFav.some(

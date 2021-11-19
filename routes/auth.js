@@ -7,7 +7,7 @@ const validator = require("email-validator");
 const User = require("../models/User");
 
 // register route
-router.post("/register", async (req, res) => {
+router.post("/user/signup", async (req, res) => {
   try {
     const email = req.fields.email;
     const password = req.fields.password;
@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
 });
 
 //login route
-router.post("/login", async (req, res) => {
+router.post("/user/login", async (req, res) => {
   try {
     const email = req.fields.email;
     const password = req.fields.password;
@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
           user.token = token;
           await user.save();
           res.header("Authorization", `Bearer ${token}`);
-          res.json({ message: "Login successful" });
+          res.json({ message: "Login successful", token: token });
         } else {
           res.status(401).json({ message: "Unauthorized" });
         }
