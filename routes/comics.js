@@ -22,7 +22,24 @@ router.get("/comics", async (req, res) => {
       }&title=${title}&limit=${limit}&skip=${page * limit - limit}`
     );
 
-    res.json(comics.data);
+    if (req.query.token) {
+      const user = await User.findOne({ token: req.query.token }).populate(
+        "comicsFav"
+      );
+      if (user.comicsFav.length > 0) {
+        user.comicsFav.map((fav) => {
+          const index = comics.data.results.findIndex(
+            (obj) => obj._id === fav._id
+          );
+          if (index !== -1) {
+            comics.data.results[index].favorite = true;
+          }
+        });
+      }
+      res.json(comics.data);
+    } else {
+      res.json(comics.data);
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -46,34 +63,29 @@ router.get("/comics/:characterId", async (req, res) => {
   }
 });
 
-// add fav comic
-router.post("/comics/fav/:id", isAuthentificated, async (req, res) => {
+// add fav comics
+router.post("/comics/fav/", isAuthentificated, async (req, res) => {
   try {
-    let id = "";
+    const user = await User.findById(req.user._id).populate("comicsFav");
+    const newArr = Object.values(req.fields);
 
-    req.params.id ? (id = req.params.id) : id;
-    const comics = await axios.get(
-      `${process.env.MARVEL_API_URI}/comics?apiKey=${process.env.MARVEL_API_KEY}`
-    );
-    const comicToFav = comics.data.results.find((comic) => comic._id === id);
-    if (comicToFav) {
-      const user = await User.findById(req.user._id).populate("comicsFav");
-      const isAlreadyFav = user.comicsFav.some((comic) => comic._id === id);
-
-      if (isAlreadyFav) {
-        await User.findByIdAndUpdate(req.user._id, {
-          $pull: { comicsFav: { _id: id } },
-        }).populate("comicsFav");
-
-        res.json({ message: "Comic removed from favorite" });
-      } else {
-        user.comicsFav.push(comicToFav);
-        await user.save();
-        res.json({ message: "Comic added to favorite" });
-      }
+    if (user.comicsFav.length > 0) {
+      newArr.map(async (fav) => {
+        const index = user.comicsFav.findIndex((obj) => obj._id === fav._id);
+        if (index === -1) {
+          newArr.map((item) => user.comicsFav.push(item));
+        } else {
+          const updateUser = await User.findByIdAndUpdate(req.user._id, {
+            $pull: { comicsFav: { _id: fav._id } },
+          }).populate("comicsFav");
+          await updateUser.save();
+        }
+      });
     } else {
-      res.status(400).json({ message: "Error during fav feature" });
+      newArr.map((item) => user.comicsFav.push(item));
     }
+    await user.save();
+    res.json({ message: "character added to favorite" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
