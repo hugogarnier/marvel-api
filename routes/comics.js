@@ -22,7 +22,10 @@ router.get("/comics", async (req, res) => {
       }&title=${title}&limit=${limit}&skip=${page * limit - limit}`
     );
 
-    if (req.query.token) {
+    const isToken = req.query.token;
+    if (isToken === "null") {
+      res.json(comics.data);
+    } else {
       const user = await User.findOne({ token: req.query.token }).populate(
         "comicsFav"
       );
@@ -36,8 +39,6 @@ router.get("/comics", async (req, res) => {
           }
         });
       }
-      res.json(comics.data);
-    } else {
       res.json(comics.data);
     }
   } catch (error) {
@@ -67,25 +68,23 @@ router.get("/comics/:characterId", async (req, res) => {
 router.post("/comics/fav/", isAuthentificated, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate("comicsFav");
-    const newArr = Object.values(req.fields);
-
     if (user.comicsFav.length > 0) {
-      newArr.map(async (fav) => {
-        const index = user.comicsFav.findIndex((obj) => obj._id === fav._id);
-        if (index === -1) {
-          newArr.map((item) => user.comicsFav.push(item));
-        } else {
-          const updateUser = await User.findByIdAndUpdate(req.user._id, {
-            $pull: { comicsFav: { _id: fav._id } },
-          }).populate("comicsFav");
-          await updateUser.save();
-        }
-      });
-    } else {
-      newArr.map((item) => user.comicsFav.push(item));
+      const index = user.comicsFav.findIndex(
+        (obj) => obj._id === req.fields._id
+      );
+      if (index === -1) {
+        user.comicsFav.push(req.fields);
+      } else if (req.fields._id) {
+        const updateUser = await User.findByIdAndUpdate(req.user._id, {
+          $pull: { comicsFav: { _id: req.fields._id } },
+        }).populate("comicsFav");
+        await updateUser.save();
+      }
+    } else if (req.fields._id) {
+      user.comicsFav.push(req.fields);
     }
     await user.save();
-    res.json({ message: "character added to favorite" });
+    res.json({ message: "comic added to favorite" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

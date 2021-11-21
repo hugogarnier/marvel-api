@@ -50,24 +50,20 @@ router.get("/characters", async (req, res) => {
 router.post("/characters/fav/", isAuthentificated, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate("charactersFav");
-    const newArr = Object.values(req.fields);
-
     if (user.charactersFav.length > 0) {
-      newArr.map(async (fav) => {
-        const index = user.charactersFav.findIndex(
-          (obj) => obj._id === fav._id
-        );
-        if (index === -1) {
-          newArr.map((item) => user.charactersFav.push(item));
-        } else {
-          const updateUser = await User.findByIdAndUpdate(req.user._id, {
-            $pull: { charactersFav: { _id: fav._id } },
-          }).populate("charactersFav");
-          await updateUser.save();
-        }
-      });
-    } else {
-      newArr.map((item) => user.charactersFav.push(item));
+      const index = user.charactersFav.findIndex(
+        (obj) => obj._id === req.fields._id
+      );
+      if (index === -1) {
+        user.charactersFav.push(req.fields);
+      } else if (req.fields._id) {
+        const updateUser = await User.findByIdAndUpdate(req.user._id, {
+          $pull: { charactersFav: { _id: req.fields._id } },
+        }).populate("charactersFav");
+        await updateUser.save();
+      }
+    } else if (req.fields._id) {
+      user.charactersFav.push(req.fields);
     }
     await user.save();
     res.json({ message: "character added to favorite" });
